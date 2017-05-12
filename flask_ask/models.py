@@ -45,14 +45,25 @@ class _Field(dict):
     def __setattr__(self, key, value):
         self.__setitem__(key, value)
 
-
 class _Response(object):
 
-    def __init__(self, speech):
+    def __init__(self, speech=None):
         self._json_default = None
-        self._response = {
-            'outputSpeech': _output_speech(speech)
-        }
+        if speech is not None:
+            self._response = {
+                'outputSpeech': _output_speech(speech)
+            }
+        else:
+            self._response = {
+                'outputSpeech': None
+            }
+
+    def dialog_directive(self):
+        dialog = [{
+            'type': 'Dialog.Delegate',
+        }]
+        self._response['directives'] = dialog
+        return self
 
     def simple_card(self, title=None, content=None):
         card = {
@@ -84,7 +95,7 @@ class _Response(object):
         card = {'type': 'LinkAccount'}
         self._response['card'] = card
         return self
-        
+
     def consent_card(self, permissions):
         card = {
             'type': 'AskForPermissionsConsent',
@@ -108,13 +119,16 @@ class _Response(object):
 
         return json.dumps(response_wrapper, **kw)
 
+class dialog(_Response):
+    def __init__(self):
+        super(dialog, self).__init__()
+        self._response['shouldEndSession'] = False
 
 class statement(_Response):
 
     def __init__(self, speech):
         super(statement, self).__init__(speech)
         self._response['shouldEndSession'] = True
-
 
 class question(_Response):
 
